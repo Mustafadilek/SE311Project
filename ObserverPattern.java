@@ -8,28 +8,32 @@ public class ObserverPattern {
         for (int i = 0; i < 2; i++)
             apps.add(new Application("TestApp" + (i + 1), i));
 
-        Device keyboard = new Keyboard();
-        Device mouse = new Mouse();
-        keyboard.interrupt();
-        mouse.interrupt();
+        ArrayList<Device> devices = new ArrayList<>();
+        devices.add(new Keyboard());
+        devices.add(new Mouse());
+        devices.add(new NetworkPort('d'));
 
-        keyboard.Register(apps);
-        mouse.Register(apps.get(0));
-        keyboard.interrupt();
-        mouse.interrupt();
+        for (Device device : devices)
+            device.interrupt();
 
-        keyboard.Unregister(apps.get(1));
-        keyboard.interrupt();
-        mouse.interrupt();
+        devices.get(0).Register(apps);
+        devices.get(1).Register(apps.get(0));
+        devices.get(2).Register(apps.get(1));
+        for (Device device : devices)
+            device.interrupt();
 
-        keyboard.UnregisterAll();
-        mouse.UnregisterAll();
+        devices.get(0).Unregister(apps.get(1));
+        for (Device device : devices)
+            device.interrupt();
+
+        for (Device device : devices)
+            device.UnregisterAll();
     }
 }
 
 abstract class Device {
     protected String data;
-    private ArrayList<Application> applications = new ArrayList<>();
+    private final ArrayList<Application> applications = new ArrayList<>();
 
     public void Register(Application application) { applications.add(application); }
 
@@ -71,8 +75,20 @@ abstract class Device {
     abstract public void interrupt();
 }
 
+class NetworkPort extends Device {
+    private final char network_data;
+
+    public NetworkPort(char network_data) { this.network_data = network_data; }
+
+    public void interrupt() {
+        data = String.valueOf(network_data);
+
+        Notify();
+    }
+}
+
 class Keyboard extends Device {
-    private Scanner scanner = new Scanner(System.in);
+    private final Scanner scanner = new Scanner(System.in);
 
     public void interrupt() {
         System.out.println("Please enter a character input from the keyboard.");
